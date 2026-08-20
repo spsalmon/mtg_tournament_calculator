@@ -94,4 +94,14 @@ describe('playRound', () => {
     playRound(input, rng(), { pDraw: 0.5, points, hasBye: false });
     expect(toObject(input)).toEqual({ 0: 8 });
   });
+
+  it('refuses to write a winner off the end of the count vector', () => {
+    // Int32Array silently discards out-of-range writes, so a guard has to throw
+    // instead of letting a player quietly vanish from the field.
+    // The 14-point player is alone and pairs down into the 13-point bracket.
+    // A carry win lands at index 17, a carry loss lands at index 16 — both past
+    // the end of a length-16 vector, so either RNG outcome must throw.
+    const input = vector(16, { 14: 1, 13: 1 });
+    expect(() => playRound(input, rng(), { pDraw: 0, points, hasBye: false })).toThrow();
+  });
 });

@@ -67,15 +67,19 @@ export function playRound(counts: Int32Array, rng: Rng, opts: RoundOptions): Rou
       const bothLocked =
         opts.idCheck !== undefined && opts.idCheck(carryPoints) && opts.idCheck(p);
       if (bothLocked || (opts.pDraw > 0 && rng.next() < opts.pDraw)) {
+        check(carryPoints + draw < next.length, `draw from ${carryPoints} overflows the count vector`);
+        check(p + draw < next.length, `draw from ${p} overflows the count vector`);
         next[carryPoints + draw] = (next[carryPoints + draw] ?? 0) + 1;
         next[p + draw] = (next[p + draw] ?? 0) + 1;
         drawn += 1;
       } else if (rng.next() < 0.5) {
+        check(carryPoints + win < next.length, `win from ${carryPoints} overflows the count vector`);
         next[carryPoints + win] = (next[carryPoints + win] ?? 0) + 1;
         next[p] = (next[p] ?? 0) + 1;
         decisive += 1;
       } else {
         next[carryPoints] = (next[carryPoints] ?? 0) + 1;
+        check(p + win < next.length, `win from ${p} overflows the count vector`);
         next[p + win] = (next[p + win] ?? 0) + 1;
         decisive += 1;
       }
