@@ -63,7 +63,11 @@ describe('validateConfig', () => {
   });
 
   it('rejects out-of-range and non-integer inputs', () => {
-    expect(validateConfig(config({ players: 1 }))).toHaveLength(1);
+    // A one-player field trips two independent problems at once: the players-count
+    // check (players < 2) and the cut-vs-field check (the default cut of 8 is >= 1).
+    // No cut value can isolate the first, since any legal cut (>= 1) is also >= a
+    // field of 1 — so this case genuinely yields two problems, not one.
+    expect(validateConfig(config({ players: 1 }))).toHaveLength(2);
     expect(validateConfig(config({ rounds: 0 }))).toHaveLength(1);
     expect(validateConfig(config({ pDraw: 1.5 }))).toHaveLength(1);
     expect(validateConfig(config({ runs: 0 }))).toHaveLength(1);
