@@ -2,6 +2,8 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import CutField from './CutField';
 import NumberField from './NumberField';
+import Notes from './Notes';
+import Results from './Results';
 import { runSimulation } from './runSimulation';
 import { DEFAULT_SEED } from '../core/rng';
 import { validateConfig } from '../core/simulate';
@@ -167,11 +169,9 @@ export default function App() {
         </button>
       </form>
 
-      {result !== null && lastConfig !== null && (
-        <pre className="overflow-x-auto rounded-lg bg-slate-900 p-3 text-xs">
-          {JSON.stringify(result, null, 2)}
-        </pre>
-      )}
+      {result !== null && lastConfig !== null && <Results result={result} config={lastConfig} />}
+
+      <Notes intentionalDraws={intentionalDraws} />
     </main>
   );
 }
