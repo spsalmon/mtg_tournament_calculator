@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { lowestOccupied, playRound } from '../../src/core/round';
 import { mulberry32 } from '../../src/core/rng';
 import { sumCounts } from '../../src/core/invariants';
+import { isLockedByDraw } from '../../src/core/lock';
 import { MTG_PROFILE } from '../../src/data/profiles';
 
 const points = MTG_PROFILE.points;
@@ -103,5 +104,20 @@ describe('playRound', () => {
     // the end of a length-16 vector, so either RNG outcome must throw.
     const input = vector(16, { 14: 1, 13: 1 });
     expect(() => playRound(input, rng(), { pDraw: 0, points, hasBye: false })).toThrow();
+  });
+});
+
+describe('playRound with intentional draws', () => {
+  it('turns a locked bracket into all draws', () => {
+    const counts = vector(20, { 15: 2, 12: 10, 9: 20, 6: 20, 3: 10, 0: 2 });
+    const out = playRound(counts, mulberry32(1), {
+      pDraw: 0,
+      points,
+      hasBye: false,
+      idCheck: (p) => isLockedByDraw(counts, p, 8, points),
+    });
+    // 15s and 12s ID; 9s and below play it out.
+    expect(toObject(out.counts)).toEqual({ 16: 2, 13: 10, 12: 10, 9: 20, 6: 15, 3: 6, 0: 1 });
+    expect(out).toMatchObject({ drawn: 6, decisive: 26, byes: 0 });
   });
 });
