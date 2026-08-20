@@ -24,6 +24,19 @@ describe('mulberry32', () => {
   it('produces different streams from different seeds', () => {
     expect(draw(mulberry32(7), 20)).not.toEqual(draw(mulberry32(8), 20));
   });
+
+  it('matches the canonical mulberry32 reference stream', () => {
+    // A wrong constant, shift, or divisor would produce plausible-looking but
+    // different output that the distribution tests cannot detect. This exact
+    // sequence pins the implementation to the canonical mulberry32 algorithm.
+    expect(draw(mulberry32(1), 5)).toEqual([
+      0.6270739405881613,
+      0.002735721180215478,
+      0.5274470399599522,
+      0.9810509674716741,
+      0.9683778982143849,
+    ]);
+  });
 });
 
 describe('binomial', () => {
