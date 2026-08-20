@@ -1,0 +1,16 @@
+{
+  "id": "mtg",
+  "name": "Magic: The Gathering",
+  "points": { "win": 3, "draw": 1, "loss": 0, "bye": 3 },
+  "structure": [
+    { "min": 9, "max": 16, "rounds": 5, "cut": 4 },
+    { "min": 17, "max": 32, "rounds": 5, "cut": 8 },
+    { "min": 33, "max": 64, "rounds": 6, "cut": 8 },
+    { "min": 65, "max": 128, "rounds": 7, "cut": 8 },
+    { "min": 129, "max": 226, "rounds": 8, "cut": 8 },
+    { "min": 227, "max": 409, "rounds": 9, "cut": 8 },
+    { "min": 410, "max": null, "rounds": 10, "cut": 8 }
+  ],
+  "sourceUrl": "https://blogs.magicjudges.org/rules/mtr-appendix-e/",
+  "sourceCheckedOn": "2026-08-20"
+}
