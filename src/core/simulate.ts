@@ -99,7 +99,7 @@ export function massAtOrBelow(distribution: ReadonlyMap<number, number>, thresho
 export function runOnce(config: SimConfig, rng: Rng): RunResult {
   const { win, draw, bye } = config.points;
   const size = config.rounds * Math.max(win, draw, bye) + 1;
-  let counts = new Int32Array(size);
+  let counts: Int32Array = new Int32Array(size);
   counts[0] = config.players;
 
   const hasBye = config.players % 2 === 1;
