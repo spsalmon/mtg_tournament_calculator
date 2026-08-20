@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 const PRESETS = [4, 8, 16, 32] as const;
 
 interface CutFieldProps {
@@ -6,7 +8,8 @@ interface CutFieldProps {
 }
 
 export default function CutField({ value, onChange }: CutFieldProps) {
-  const isPreset = PRESETS.some((preset) => preset === value);
+  const [custom, setCustom] = useState(!PRESETS.some((preset) => preset === value));
+  const showCustom = custom || !PRESETS.some((preset) => preset === value);
   return (
     <div>
       <span className="block text-sm font-medium text-slate-200">Top cut size</span>
@@ -15,10 +18,13 @@ export default function CutField({ value, onChange }: CutFieldProps) {
           <button
             key={preset}
             type="button"
-            aria-pressed={value === preset}
-            onClick={() => onChange(preset)}
+            aria-pressed={!showCustom && value === preset}
+            onClick={() => {
+              setCustom(false);
+              onChange(preset);
+            }}
             className={
-              value === preset
+              !showCustom && value === preset
                 ? 'rounded-lg bg-sky-500 px-4 py-3 text-lg font-semibold text-slate-950'
                 : 'rounded-lg border border-slate-600 bg-slate-900 px-4 py-3 text-lg text-slate-100'
             }
@@ -28,18 +34,18 @@ export default function CutField({ value, onChange }: CutFieldProps) {
         ))}
         <button
           type="button"
-          aria-pressed={!isPreset}
-          onClick={() => onChange(value)}
+          aria-pressed={showCustom}
+          onClick={() => setCustom(true)}
           className={
-            isPreset
-              ? 'rounded-lg border border-slate-600 bg-slate-900 px-4 py-3 text-lg text-slate-100'
-              : 'rounded-lg bg-sky-500 px-4 py-3 text-lg font-semibold text-slate-950'
+            showCustom
+              ? 'rounded-lg bg-sky-500 px-4 py-3 text-lg font-semibold text-slate-950'
+              : 'rounded-lg border border-slate-600 bg-slate-900 px-4 py-3 text-lg text-slate-100'
           }
         >
           Custom
         </button>
       </div>
-      {!isPreset && (
+      {showCustom && (
         <input
           aria-label="Custom top cut size"
           type="number"

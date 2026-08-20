@@ -148,7 +148,10 @@ export default function App() {
         </label>
 
         {problems.length > 0 && (
-          <ul className="rounded-lg border border-red-500/60 bg-red-500/10 p-3 text-sm text-red-200">
+          <ul
+            role="alert"
+            className="rounded-lg border border-red-500/60 bg-red-500/10 p-3 text-sm text-red-200"
+          >
             {problems.map((problem) => (
               <li key={problem}>{problem}</li>
             ))}
