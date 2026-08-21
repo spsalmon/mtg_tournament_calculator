@@ -105,6 +105,7 @@ export function playRound(counts: Int32Array, rng: Rng, opts: RoundOptions): Rou
     check(p + win < next.length, `win from ${p} overflows the count vector`);
     next[p + win] = (next[p + win] ?? 0) + decided;
     next[p] = (next[p] ?? 0) + decided;
+    check(p + draw < next.length, `draw from ${p} overflows the count vector`);
     next[p + draw] = (next[p + draw] ?? 0) + 2 * draws;
 
     decisive += decided;

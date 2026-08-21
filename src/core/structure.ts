@@ -20,6 +20,6 @@ export function prefillFor(profile: GameProfile, players: number): Prefill {
   // separate the field, and cut no more players than the event actually has.
   const safePlayers = Math.max(players, 2);
   const rounds = Math.max(1, Math.ceil(Math.log2(safePlayers)));
-  const cut = Math.max(2, Math.min(4, safePlayers - 1));
+  const cut = Math.max(1, Math.min(4, safePlayers - 1));
   return { rounds, cut };
 }

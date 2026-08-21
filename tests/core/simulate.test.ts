@@ -243,6 +243,23 @@ describe('draws raise the bar', () => {
   });
 });
 
+describe('guaranteed can exceed the reachable maximum', () => {
+  it('reports a guaranteed line above rounds*win when even a max finish missed the cut', () => {
+    const tiny = config({ players: 256, rounds: 4, cut: 8, pDraw: 0.02, runs: 500, seed: 7 });
+    const result = simulate(tiny);
+    const reachableMax = tiny.rounds * tiny.points.win;
+    expect(result.guaranteed).toBeGreaterThan(reachableMax);
+    expect(result.guaranteed).toBe(result.maxBestOut + result.increment);
+  });
+
+  it('leaves the ordinary golden configuration unaffected', () => {
+    const golden = config({ players: 32, rounds: 5, cut: 8, pDraw: 0, runs: 200 });
+    const result = simulate(golden);
+    expect(result.possible).toBe(9);
+    expect(result.guaranteed).toBe(12);
+  });
+});
+
 describe('intentional draws', () => {
   const base = config({ players: 64, rounds: 6, cut: 8, pDraw: 0, runs: 50, seed: 3 });
 

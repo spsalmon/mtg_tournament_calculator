@@ -16,6 +16,9 @@ function formatPercent(fraction: number): string {
 export default function Results({ result, config }: ResultsProps) {
   const { rounds, points } = config;
   const runLabel = `${result.runs.toLocaleString()} runs`;
+  const reachableMax = rounds * points.win;
+  const noGuarantee = result.guaranteed > reachableMax;
+  const noRobustGuarantee = result.robustGuaranteed > reachableMax;
 
   return (
     <section aria-live="polite" className="flex flex-col gap-5">
@@ -27,9 +30,15 @@ export default function Results({ result, config }: ResultsProps) {
         <h2 className="text-sm font-semibold text-slate-300">
           Guaranteed — never missed the cut in {runLabel}
         </h2>
-        <p className="mt-1 text-4xl font-bold text-sky-300">
-          {formatPoints(result.guaranteed, rounds, points)}
-        </p>
+        {noGuarantee ? (
+          <p className="mt-1 text-xl font-semibold text-sky-300">
+            No total guaranteed the cut in these runs — even a maximum finish missed at least once.
+          </p>
+        ) : (
+          <p className="mt-1 text-4xl font-bold text-sky-300">
+            {formatPoints(result.guaranteed, rounds, points)}
+          </p>
+        )}
         <p className="mt-2 text-sm text-slate-400">
           No simulated player finished on this many points and missed. That is an observed
           extremum over {runLabel}, not a proof — more runs can only push this number up.
@@ -53,9 +62,13 @@ export default function Results({ result, config }: ResultsProps) {
         <h2 className="text-sm font-semibold text-slate-300">Plan around these instead</h2>
         <dl className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <dt className="text-xs text-slate-400">99th percentile of the best total that missed</dt>
+            <dt className="text-xs text-slate-400">
+              One step above the 99th-percentile total that missed
+            </dt>
             <dd className="text-xl font-semibold">
-              {formatPoints(result.robustGuaranteed, rounds, points)}
+              {noRobustGuarantee
+                ? 'No total cleared 99% of runs'
+                : formatPoints(result.robustGuaranteed, rounds, points)}
             </dd>
           </div>
           <div>

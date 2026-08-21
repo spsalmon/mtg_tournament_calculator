@@ -17,7 +17,7 @@ describe('prefillFor', () => {
   it('falls back to a power-of-two bracket below the smallest row', () => {
     expect(prefillFor(MTG_PROFILE, 8)).toEqual({ rounds: 3, cut: 4 });
     expect(prefillFor(MTG_PROFILE, 3)).toEqual({ rounds: 2, cut: 2 });
-    expect(prefillFor(MTG_PROFILE, 2)).toEqual({ rounds: 1, cut: 2 });
+    expect(prefillFor(MTG_PROFILE, 2)).toEqual({ rounds: 1, cut: 1 });
   });
 });
 

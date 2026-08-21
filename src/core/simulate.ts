@@ -165,7 +165,6 @@ export function simulate(config: SimConfig): SimResult {
   }
 
   const increment = pointIncrement(config);
-  const ceiling = config.rounds * config.points.win;
   const sortedWorst = [...worstIns].sort((a, b) => a - b);
   const sortedBest = [...bestOuts].sort((a, b) => a - b);
   const worstInDistribution = empiricalDistribution(worstIns);
@@ -175,9 +174,9 @@ export function simulate(config: SimConfig): SimResult {
     increment,
     possible,
     possibleProbability: massAtOrBelow(worstInDistribution, possible),
-    guaranteed: Math.min(maxBestOut + increment, ceiling),
+    guaranteed: maxBestOut + increment,
     robustPossible: percentile(sortedWorst, 0.01),
-    robustGuaranteed: Math.min(percentile(sortedBest, 0.99) + increment, ceiling),
+    robustGuaranteed: percentile(sortedBest, 0.99) + increment,
     maxBestOut,
   };
 }
