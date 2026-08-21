@@ -24,6 +24,12 @@ jobs:
           node-version: 22
           cache: npm
       - uses: actions/configure-pages@v5
+        # enablement turns Pages on via the API using this workflow's own
+        # pages:write token, so the first successful run configures the site
+        # itself instead of needing someone to set Settings -> Pages -> Source
+        # to "GitHub Actions" by hand.
+        with:
+          enablement: true
       - run: npm ci
       - run: npm test
       - run: npm run build
