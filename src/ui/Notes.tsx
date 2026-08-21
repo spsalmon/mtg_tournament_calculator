@@ -18,12 +18,13 @@ export default function Notes({ intentionalDraws }: NotesProps) {
       {intentionalDraws && (
         <p>
           <span className="font-semibold text-slate-300">
-            Intentional draws are only modelled in the final round.
+            Simulated players draw out as soon as drawing every remaining round still makes the cut.
           </span>{' '}
-          Being locked is exactly checkable one round out; earlier rounds need a worst-case search
-          this version does not do, so a 7-0 player drawing in round 7 of 8 will not show up here.
-          The lock check also counts only players who would finish strictly ahead, which makes it
-          optimistic when a whole bracket draws into a tie for the last few slots.
+          Being locked is decided by a worst case over the rounds left: the next round's pairings
+          are known from the standings, and after that anyone may beat anyone. That worst case is
+          deliberately generous to the field, so the tool draws later than a real player might. It
+          also counts only players who would finish strictly ahead, which makes it optimistic when a
+          whole bracket draws into a tie for the last few slots.
         </p>
       )}
 

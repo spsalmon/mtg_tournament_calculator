@@ -128,8 +128,8 @@ export default function App() {
           <span>
             <span className="font-medium">Include intentional draws</span>
             <span className="mt-1 block text-xs text-slate-400">
-              Simulated players take the draw when it locks them into the cut. Only checked in the
-              final round.
+              Simulated players draw out every remaining round the moment a draw locks them into
+              the cut — a 3-0 with two rounds left draws both.
             </span>
           </span>
         </label>

@@ -118,16 +118,34 @@ When the checkbox is ticked: **a pairing becomes an ID if both players would be 
 by taking the draw.** No thresholds, no tuning, no probability — a player either is or is not
 mathematically safe.
 
-**v1 restricts the ID check to the final round.** Locking is exactly checkable one round out; in
-earlier rounds it requires a recursive worst-case over all remaining rounds, which is deferred. This
-captures nearly every ID that happens in practice. Document the limitation in the UI copy; it does
-mean the tool will not model, say, a 7-0 player drawing in round 7 of 8.
+**The check runs every round, over all remaining rounds.** A player who can draw out the rest of
+the event starts drawing the moment that becomes true — a 3-0 with two rounds left draws both, which
+is what players actually do.
 
-Final-round lock check for a player on `p` points who draws to `p+1`: count the maximum number of
-players who could possibly finish strictly above `p+1`. A player currently on `q` can finish at most
-`q+3`, but they cannot all win — within a bracket of size `b`, at most `ceil(b/2)` players can gain
-3 points (the `floor(b/2)` winners, plus the pair-down player if they win). Sum that ceiling over
-all brackets with `q + 3 > p + 1`. If the total is `< C`, the player is locked.
+Lock check with `k` rounds left for a player on `p` points who draws them all, finishing on
+`p + k·draw`: count the maximum number of players who could possibly finish strictly above that. A
+player on `q` needs to gain `g = p + k·draw + 1 − q`. Only the next round's pairings are known from
+the standings; after it the field scatters and anyone may face anyone, so the later `k−1` rounds are
+left unconstrained at a win each. Every bracket therefore reduces to what it must gain in the next
+round alone, `need = g − (k−1)·win`:
+
+- `need ≤ draw` → all `b`. Drawing the next round is enough (`need ≤ 0` included — points never
+  decrease).
+- `need ≤ win` → only the winners, bounded below.
+- otherwise → nobody, bar a bye holder if a bye ever outruns a win.
+
+Leaving the later rounds unconstrained is a deliberate over-count: real Swiss re-brackets the
+winners and halves them again. Over-counting can only withhold a draw, never invent one.
+
+**The winner bound is not `ceil(b/2)`.** Pair-downs and byes both beat that, and an under-count is
+exactly how a lock gets invented. Both are deterministic in the count vector, so walk the brackets
+top-down as `round.ts` does: a bracket of `b` receiving a pair-down `c` fields `ceil((b+c)/2)`
+possible winners — its own matches, plus the seat facing the player paired down into it, plus the
+seat it pairs down itself — and passes `(b+c) % 2` onward. The bye comes off the lowest occupied
+bracket before any pairing and is a win nobody played for, so count its holder separately. A flat
+`ceil(b/2)` fails the exhaustive test in §5 on 317 cases.
+
+Sum over all brackets. If the total is `< C`, the player is locked.
 
 At the count-vector level this is convenient: both players in a same-bracket pairing sit on
 identical points, so an entire bracket either IDs or does not. Only pair-down pairings need the two
@@ -226,6 +244,10 @@ copy may already be stale.
   other on 11.
 - **ID rule sanity.** With IDs on, the number of players finishing on the lock threshold must be
   greater than or equal to the IDs-off case for the same seed.
+- **The lock bound is never beaten.** Exhaustively: for every bracket shape of a small field and
+  every threshold, play out *every* legal continuation of the next one and two rounds and confirm
+  the number of players finishing above the threshold never exceeds what `maxFinishingAbove`
+  predicted. An under-count here is a player drawing into a cut they then miss.
 - **Odd fields.** `N` odd produces exactly `R` byes.
 
 ---

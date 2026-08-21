@@ -61,3 +61,60 @@ describe('isLockedByDraw', () => {
     expect(isLockedByDraw(afterFiveRounds, 15, 1, points)).toBe(false);
   });
 });
+
+describe('maxFinishingAbove with several rounds left', () => {
+  it('halves a bracket once, not once per round', () => {
+    // Two rounds out, a 15-point finish needs a gain of 3 from 12: the second
+    // round is unconstrained, so the 12s only have to not lose the next one.
+    const counts = vector(32, { 12: 4, 9: 16, 6: 24 });
+    expect(maxFinishingAbove(counts, 14, points, 2)).toBe(4 + 8);
+    // The 6s top out at 12 over two rounds and never reach 15.
+    expect(maxFinishingAbove(counts, 14, points, 1)).toBe(2);
+  });
+
+  it('widens the net as the rounds left go up', () => {
+    const counts = vector(32, { 9: 2, 6: 6, 3: 6, 0: 2 });
+    expect(maxFinishingAbove(counts, 11, points, 1)).toBe(1);
+    expect(maxFinishingAbove(counts, 11, points, 2)).toBe(5);
+    // Three rounds out the 9s and 6s can all draw past 11, half the 3s can win
+    // out to 12, and the 0s top out at 9 no matter what.
+    expect(maxFinishingAbove(counts, 11, points, 3)).toBe(2 + 6 + 3);
+  });
+
+  it('counts the pair-down and the bye, which both beat a flat half-bracket', () => {
+    // One player on 6 pairs down into a bracket of two on 3, one of whom byes
+    // out to 6 first. Both of the 3s can still clear 5: one wins the pair-down,
+    // the other took the bye. A flat ceil(b/2) counts one of them and under-reports
+    // the field, which is how a bound meant to be conservative invents a lock.
+    const counts = vector(16, { 6: 1, 3: 2 });
+    expect(maxFinishingAbove(counts, 5, points, 1, true)).toBe(3);
+  });
+
+  it('lets a pair-down add a winner to the bracket it falls into', () => {
+    // The odd bracket of three on 12 sends one player down into the four on 9,
+    // so five players are paired there and three of them can win, not two.
+    const counts = vector(20, { 12: 3, 9: 4, 6: 9 });
+    expect(maxFinishingAbove(counts, 11, points, 1)).toBe(3 + 3);
+  });
+});
+
+describe('isLockedByDraw with several rounds left', () => {
+  // 16 players, 5 rounds, top 8: the classic "I am 3-0, can I draw out?".
+  const afterThree = vector(20, { 9: 2, 6: 6, 3: 6, 0: 2 });
+  const afterTwo = vector(20, { 6: 4, 3: 8, 0: 4 });
+
+  it('lets a 3-0 draw the last two rounds into a top 8', () => {
+    expect(isLockedByDraw(afterThree, 9, 8, points, 2)).toBe(true);
+  });
+
+  it('does not let the same 3-0 draw out into a top 4', () => {
+    // Five players can still finish above 11, which is more than fills a top 4.
+    expect(isLockedByDraw(afterThree, 9, 4, points, 2)).toBe(false);
+  });
+
+  it('does not lock a 2-0 three rounds out', () => {
+    // Everyone from 3 points up can draw their way past 9, so the field behind
+    // is nowhere near exhausted yet.
+    expect(isLockedByDraw(afterTwo, 6, 8, points, 3)).toBe(false);
+  });
+});

@@ -109,11 +109,12 @@ export function runOnce(config: SimConfig, rng: Rng): RunResult {
 
   for (let round = 1; round <= config.rounds; round++) {
     const before = counts;
-    // v1 only checks locks one round out, where "locked" is exactly decidable.
-    const idCheck =
-      config.intentionalDraws && round === config.rounds
-        ? (p: number) => isLockedByDraw(before, p, config.cut, config.points)
-        : undefined;
+    // Checked every round, not just the last: a player who can draw out the rest
+    // of the event starts drawing the moment that becomes true.
+    const remaining = config.rounds - round + 1;
+    const idCheck = config.intentionalDraws
+      ? (p: number) => isLockedByDraw(before, p, config.cut, config.points, remaining, hasBye)
+      : undefined;
 
     const outcome = playRound(before, rng, {
       pDraw: config.pDraw,

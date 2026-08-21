@@ -278,6 +278,18 @@ describe('intentional draws', () => {
     expect(withIds.counts[threshold] ?? 0).toBeGreaterThanOrEqual(without.counts[threshold] ?? 0);
   });
 
+  it('draws out from 3-0 with two rounds still to play', () => {
+    // 16 players, 5 rounds, top 8. Two players are 3-0 after round 3, and the
+    // field behind them can no longer put eight players above 11, so they draw
+    // rounds 4 AND 5. Eleven points is three wins and two draws: at pDraw = 0
+    // it is unreachable unless a player intentionally drew more than once.
+    const small = config({ players: 16, rounds: 5, cut: 8, seed: 5, intentionalDraws: true });
+    const withIds = runOnce(small, mulberry32(5));
+    const without = runOnce({ ...small, intentionalDraws: false }, mulberry32(5));
+    expect(withIds.counts[11]).toBe(2);
+    expect(without.counts[11] ?? 0).toBe(0);
+  });
+
   it('shifts both lines the way IDs actually shift them', () => {
     const without = simulate({ ...base, intentionalDraws: false });
     const withIds = simulate({ ...base, intentionalDraws: true });
