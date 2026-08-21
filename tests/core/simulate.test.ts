@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { mulberry32 } from '../../src/core/rng';
 import {
+  cutSlotsByPoints,
   empiricalDistribution,
   massAtOrBelow,
   percentile,
@@ -299,5 +300,79 @@ describe('intentional draws', () => {
     // 13 + 1: the increment drops from a full win to a single point once draws
     // are possible, which is why `guaranteed` can fall while `possible` rises.
     expect(withIds.guaranteed).toBe(14);
+  });
+});
+
+describe('cutSlotsByPoints', () => {
+  function vector(entries: Record<number, number>): Int32Array {
+    const size = Math.max(...Object.keys(entries).map(Number)) + 1;
+    const counts = new Int32Array(size);
+    for (const [p, n] of Object.entries(entries)) counts[Number(p)] = n;
+    return counts;
+  }
+
+  it('fills the cut from the top down, splitting the bracket that straddles the line', () => {
+    const slots = cutSlotsByPoints(vector({ 15: 1, 12: 5, 9: 10 }), 8);
+    expect(toObject(slots)).toEqual({ 15: 1, 12: 5, 9: 2 });
+  });
+
+  it('hands out exactly `cut` slots', () => {
+    const slots = cutSlotsByPoints(vector({ 15: 1, 12: 5, 9: 10, 6: 10, 3: 5, 0: 1 }), 8);
+    expect(headcount(slots)).toBe(8);
+  });
+
+  it('never seats more players on a total than finished on it', () => {
+    const counts = vector({ 12: 3, 9: 4, 6: 20 });
+    const slots = cutSlotsByPoints(counts, 8);
+    slots.forEach((seated, p) => {
+      expect(seated).toBeLessThanOrEqual(counts[p] ?? 0);
+    });
+  });
+
+  it('seats the whole field when the cut is larger than it', () => {
+    const counts = vector({ 12: 3, 9: 4 });
+    expect(headcount(cutSlotsByPoints(counts, 32))).toBe(7);
+  });
+});
+
+describe('simulate standings', () => {
+  it('reports the cut chance of every total reached in the golden case', () => {
+    const result = simulate(config({ players: 32, rounds: 5, cut: 8, runs: 50 }));
+    // Final counts are always {15:1, 12:5, 9:10, 6:10, 3:5, 0:1}: the top six
+    // seats are settled, and the last two go to two of the ten players on 9.
+    expect(result.standings.map((row) => row.points)).toEqual([15, 12, 9, 6, 3, 0]);
+    expect(result.standings.map((row) => row.averagePlayers)).toEqual([1, 5, 10, 10, 5, 1]);
+    const chances = result.standings.map((row) => row.cutChance);
+    expect(chances[0]).toBeCloseTo(1, 12);
+    expect(chances[1]).toBeCloseTo(1, 12);
+    expect(chances[2]).toBeCloseTo(0.2, 12);
+    expect(chances.slice(3)).toEqual([0, 0, 0]);
+  });
+
+  it('never rates a lower total above a higher one', () => {
+    const result = simulate(config({ pDraw: 0.05, intentionalDraws: true, runs: 200 }));
+    for (let i = 1; i < result.standings.length; i++) {
+      expect(result.standings[i]!.cutChance).toBeLessThanOrEqual(result.standings[i - 1]!.cutChance);
+    }
+  });
+
+  it('accounts for the whole field', () => {
+    const result = simulate(config({ players: 57, pDraw: 0.05, runs: 200 }));
+    const seated = result.standings.reduce((sum, row) => sum + row.averagePlayers, 0);
+    expect(seated).toBeCloseTo(57, 9);
+    for (const row of result.standings) {
+      expect(row.averagePlayers).toBeGreaterThan(0);
+      expect(row.cutChance).toBeGreaterThanOrEqual(0);
+      expect(row.cutChance).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('seats exactly the cut, run for run', () => {
+    const result = simulate(config({ players: 57, pDraw: 0.05, runs: 200 }));
+    const seated = result.standings.reduce(
+      (sum, row) => sum + row.averagePlayers * row.cutChance,
+      0,
+    );
+    expect(seated).toBeCloseTo(8, 9);
   });
 });

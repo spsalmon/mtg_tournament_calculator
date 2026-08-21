@@ -41,3 +41,25 @@ export function formatPoints(points: number, rounds: number, values: PointValues
   const record = recordFor(points, rounds, values);
   return record === null ? `${points} ${unit}` : `${points} ${unit} (${formatRecord(record)})`;
 }
+
+/**
+ * A probability as a percentage, coarse enough to read at a table: whole numbers
+ * from 10% up, one decimal below that, and a floor that never rounds a real chance
+ * away to nothing.
+ */
+export function formatPercent(fraction: number): string {
+  const percent = fraction * 100;
+  if (percent > 0 && percent < 0.1) return '<0.1%';
+  if (percent >= 10) return `${Math.round(percent)}%`;
+  return `${Math.round(percent * 10) / 10}%`;
+}
+
+/**
+ * An average bracket size. A total nobody reached is dropped before it gets here, so
+ * anything that rounds to zero is a real but tiny bracket and says so rather than
+ * printing "0.0" next to a 100% chance.
+ */
+export function formatPlayers(average: number): string {
+  if (average === 0) return '0';
+  return average < 0.05 ? '<0.1' : average.toFixed(1);
+}

@@ -2,7 +2,7 @@ import { check, checkHeadcount, checkMass } from './invariants';
 import { isLockedByDraw } from './lock';
 import { playRound } from './round';
 import { mulberry32, type Rng } from './rng';
-import type { RunResult, SimConfig, SimResult } from './types';
+import type { RunResult, SimConfig, SimResult, StandingRow } from './types';
 
 export function validateConfig(config: SimConfig): string[] {
   const problems: string[] = [];
@@ -95,11 +95,33 @@ export function massAtOrBelow(distribution: ReadonlyMap<number, number>, thresho
   return mass;
 }
 
+/**
+ * How many players on each point total landed inside the top `cut`, for one run.
+ *
+ * Seats fill from the top down, so the bracket straddling the cut line gets only
+ * the slots left over — twelve players on 12 points with five seats remaining seat
+ * five of them. Which five is a tiebreaker question, and v1 does not model those.
+ */
+export function cutSlotsByPoints(counts: Int32Array, cut: number): Int32Array {
+  const slots = new Int32Array(counts.length);
+  let remaining = cut;
+  for (let p = counts.length - 1; p >= 0 && remaining > 0; p--) {
+    const seated = Math.min(counts[p] ?? 0, remaining);
+    slots[p] = seated;
+    remaining -= seated;
+  }
+  return slots;
+}
+
+/** Length of a count vector: one slot per total from zero up to the best finish possible. */
+export function countVectorSize(config: SimConfig): number {
+  const { win, draw, bye } = config.points;
+  return config.rounds * Math.max(win, draw, bye) + 1;
+}
+
 /** Play one whole tournament and measure the cut line. */
 export function runOnce(config: SimConfig, rng: Rng): RunResult {
-  const { win, draw, bye } = config.points;
-  const size = config.rounds * Math.max(win, draw, bye) + 1;
-  let counts: Int32Array = new Int32Array(size);
+  let counts: Int32Array = new Int32Array(countVectorSize(config));
   counts[0] = config.players;
 
   const hasBye = config.players % 2 === 1;
@@ -156,6 +178,11 @@ export function simulate(config: SimConfig): SimResult {
   const bestOuts: number[] = new Array<number>(config.runs);
   let possible = Number.POSITIVE_INFINITY;
   let maxBestOut = Number.NEGATIVE_INFINITY;
+  // Indexed by integer point total — never by a float, per the numerical hygiene rule.
+  const size = countVectorSize(config);
+  const finished = new Float64Array(size);
+  const seated = new Float64Array(size);
+  const seats = Math.min(config.cut, config.players);
 
   for (let i = 0; i < config.runs; i++) {
     const run = runOnce(config, rng);
@@ -163,12 +190,33 @@ export function simulate(config: SimConfig): SimResult {
     bestOuts[i] = run.bestOut;
     if (run.worstIn < possible) possible = run.worstIn;
     if (run.bestOut > maxBestOut) maxBestOut = run.bestOut;
+
+    const slots = cutSlotsByPoints(run.counts, config.cut);
+    let handedOut = 0;
+    for (let p = 0; p < size; p++) {
+      const slot = slots[p] ?? 0;
+      finished[p] = (finished[p] ?? 0) + (run.counts[p] ?? 0);
+      seated[p] = (seated[p] ?? 0) + slot;
+      handedOut += slot;
+    }
+    check(handedOut === seats, `run ${i} seated ${handedOut} players, expected ${seats}`);
   }
 
   const increment = pointIncrement(config);
   const sortedWorst = [...worstIns].sort((a, b) => a - b);
   const sortedBest = [...bestOuts].sort((a, b) => a - b);
   const worstInDistribution = empiricalDistribution(worstIns);
+
+  const standings: StandingRow[] = [];
+  for (let p = size - 1; p >= 0; p--) {
+    const players = finished[p] ?? 0;
+    if (players === 0) continue;
+    standings.push({
+      points: p,
+      averagePlayers: players / config.runs,
+      cutChance: (seated[p] ?? 0) / players,
+    });
+  }
 
   return {
     runs: config.runs,
@@ -179,5 +227,6 @@ export function simulate(config: SimConfig): SimResult {
     robustPossible: percentile(sortedWorst, 0.01),
     robustGuaranteed: percentile(sortedBest, 0.99) + increment,
     maxBestOut,
+    standings,
   };
 }

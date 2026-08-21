@@ -46,6 +46,15 @@ export interface RunResult {
   readonly byes: number;
 }
 
+export interface StandingRow {
+  /** Final match-point total. */
+  readonly points: number;
+  /** Mean number of players finishing on this total, per run. */
+  readonly averagePlayers: number;
+  /** Of every simulated player who finished here, the fraction that made the cut. */
+  readonly cutChance: number;
+}
+
 export interface SimResult {
   readonly runs: number;
   /** Smallest reachable step between two point totals under this configuration. */
@@ -62,4 +71,6 @@ export interface SimResult {
   readonly robustGuaranteed: number;
   /** Raw max of bestOut across runs, before the increment is applied. */
   readonly maxBestOut: number;
+  /** Every total somebody reached, highest first, with its chance of making the cut. */
+  readonly standings: readonly StandingRow[];
 }

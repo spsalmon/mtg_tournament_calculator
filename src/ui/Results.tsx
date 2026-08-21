@@ -1,16 +1,10 @@
-import { formatPoints } from '../core/format';
+import Standings from './Standings';
+import { formatPercent, formatPoints } from '../core/format';
 import type { SimConfig, SimResult } from '../core/types';
 
 interface ResultsProps {
   readonly result: SimResult;
   readonly config: SimConfig;
-}
-
-function formatPercent(fraction: number): string {
-  const percent = fraction * 100;
-  if (percent > 0 && percent < 0.1) return '<0.1%';
-  if (percent >= 10) return `${Math.round(percent)}%`;
-  return `${Math.round(percent * 10) / 10}%`;
 }
 
 export default function Results({ result, config }: ResultsProps) {
@@ -67,6 +61,8 @@ export default function Results({ result, config }: ResultsProps) {
           line itself, tiebreakers decide — and this tool does not model them.
         </p>
       </div>
+
+      <Standings standings={result.standings} config={config} />
 
       <div className="rounded-xl border border-slate-700 p-4">
         <h2 className="text-sm font-semibold text-slate-300">Plan around these instead</h2>

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { formatPoints, formatRecord, recordFor } from '../../src/core/format';
+import {
+  formatPercent,
+  formatPlayers,
+  formatPoints,
+  formatRecord,
+  recordFor,
+} from '../../src/core/format';
 import { MTG_PROFILE } from '../../src/data/profiles';
 
 const points = MTG_PROFILE.points;
@@ -37,5 +43,41 @@ describe('formatPoints', () => {
 
   it('prints the bare total when no record reaches it', () => {
     expect(formatPoints(14, 5, points)).toBe('14 pts');
+  });
+});
+
+describe('formatPercent', () => {
+  it('prints whole numbers from ten percent up', () => {
+    expect(formatPercent(1)).toBe('100%');
+    expect(formatPercent(0.42)).toBe('42%');
+    expect(formatPercent(0.1)).toBe('10%');
+  });
+
+  it('keeps one decimal below ten percent', () => {
+    expect(formatPercent(0.043)).toBe('4.3%');
+    expect(formatPercent(0.0025)).toBe('0.3%');
+  });
+
+  it('never rounds a real chance down to nothing', () => {
+    expect(formatPercent(0.0002)).toBe('<0.1%');
+  });
+
+  it('prints an impossible outcome as a flat zero', () => {
+    expect(formatPercent(0)).toBe('0%');
+  });
+});
+
+describe('formatPlayers', () => {
+  it('keeps one decimal on an average bracket size', () => {
+    expect(formatPlayers(13.34)).toBe('13.3');
+    expect(formatPlayers(1)).toBe('1.0');
+  });
+
+  it('never rounds a bracket somebody reached down to nothing', () => {
+    expect(formatPlayers(0.02)).toBe('<0.1');
+  });
+
+  it('prints an empty bracket as a flat zero', () => {
+    expect(formatPlayers(0)).toBe('0');
   });
 });
