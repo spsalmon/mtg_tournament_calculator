@@ -28,7 +28,9 @@ export default function Results({ result, config }: ResultsProps) {
 
       <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
         <h2 className="text-sm font-semibold text-slate-300">
-          Guaranteed — never missed the cut in {runLabel}
+          {noGuarantee
+            ? `Guaranteed — no total cleared the cut in ${runLabel}`
+            : `Guaranteed — never missed the cut in ${runLabel}`}
         </h2>
         {noGuarantee ? (
           <p className="mt-1 text-xl font-semibold text-sky-300">
@@ -39,10 +41,18 @@ export default function Results({ result, config }: ResultsProps) {
             {formatPoints(result.guaranteed, rounds, points)}
           </p>
         )}
-        <p className="mt-2 text-sm text-slate-400">
-          No simulated player finished on this many points and missed. That is an observed
-          extremum over {runLabel}, not a proof — more runs can only push this number up.
-        </p>
+        {noGuarantee ? (
+          <p className="mt-2 text-sm text-slate-400">
+            At least one simulated player finished on the highest total this format can produce and
+            still missed the cut, over {runLabel}. That is an observed extremum, not a proof — more
+            runs can only reinforce it, not rescue a guarantee.
+          </p>
+        ) : (
+          <p className="mt-2 text-sm text-slate-400">
+            No simulated player finished on this many points and missed. That is an observed
+            extremum over {runLabel}, not a proof — more runs can only push this number up.
+          </p>
+        )}
       </div>
 
       <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
