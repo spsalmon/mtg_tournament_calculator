@@ -24,12 +24,11 @@ jobs:
           node-version: 22
           cache: npm
       - uses: actions/configure-pages@v5
-        # enablement turns Pages on via the API using this workflow's own
-        # pages:write token, so the first successful run configures the site
-        # itself instead of needing someone to set Settings -> Pages -> Source
-        # to "GitHub Actions" by hand.
-        with:
-          enablement: true
+        # Pages must already be enabled on the repository: Settings -> Pages ->
+        # Source -> "GitHub Actions". The workflow cannot do it for you — the
+        # GITHUB_TOKEN cannot create a Pages site for the first time, even with
+        # pages:write on a public repo (it returns "Resource not accessible by
+        # integration"). Once the site exists, this step just reads its config.
       - run: npm ci
       - run: npm test
       - run: npm run build
